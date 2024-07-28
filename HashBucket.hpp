@@ -102,7 +102,7 @@ namespace concurrency {
     private:
         HashNode<K, V>* m_startNode = nullptr;
         u32 m_currElems;
-        u32 m_capacity = 10;
+        u32 m_capacity;
         mutable std::shared_mutex m_mutex;
     };
 }
