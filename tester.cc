@@ -13,6 +13,12 @@ TEST(SingleThread, SingleInsert) {
     EXPECT_EQ(res.value(), "World");
 }
 
+TEST(SingleThread, InvalidKey) {
+    hash_table test(1);
+    test.put("Hello", "World");
+    EXPECT_FALSE(test.get("NON_EXISTENT").has_value());
+}
+
 TEST(SingleThread, SameKeyMultiInsert) {
     hash_table test(1);
     test.put("Hello", "World");
@@ -20,6 +26,14 @@ TEST(SingleThread, SameKeyMultiInsert) {
     auto res = test.get("Hello");
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(res.value(), "Concurrent");
+}
+
+TEST(SingleThread, DeleteNonExistentKey) {
+    hash_table test(1);
+    test.put("Hello", "World");
+    test.erase("NON_EXISTENT");
+    auto res = test.get("Hello");
+    EXPECT_TRUE(res.has_value());
 }
 
 TEST(SingleThread, DeletedKey) {
@@ -68,6 +82,7 @@ void insertKeyWithThread(hash_table& table, std::string own_key) {
 }
 
 void mutiThreadDeleteFromOtherThread(hash_table& table, std::string other_key) {
+    std::this_thread::sleep_for(std::chrono::nanoseconds(10));
     table.erase(other_key);
 };
 
