@@ -43,33 +43,33 @@ namespace concurrency {
         void put(const K& key, const V& value) {
             HashNode<K, V>* node;
             std::unique_lock lock(m_mutex);
-            if (m_capacity == m_currElems) {
-                auto* currNode = m_startNode;
-                HashNode<K, V>* prev = nullptr;
-                while (currNode->next != nullptr) {
-                    prev = currNode;
-                    currNode = currNode->next;
-                }
-                prev->next = nullptr;
-                node = currNode;
-                node->setValue(value);
-                node->setKey(key);
-            } else {
-                HashNode<K, V>* prev = nullptr;
-                auto* currNode = m_startNode;
-                while (currNode != nullptr && currNode->key() != key) {
-                    prev = currNode;
-                    currNode = currNode->next;
-                }
-                if (currNode == nullptr) {
-                    node = new HashNode(key, value);
-                } else {
-                    if (prev != nullptr) {
-                        prev->next = currNode->next;
+            HashNode<K, V>* prev = nullptr;
+            auto* currNode = m_startNode;
+            while (currNode != nullptr && currNode->key() != key) {
+                prev = currNode;
+                currNode = currNode->next;
+            }
+            if (currNode == nullptr) {
+                if (m_capacity == m_currElems) {
+                    currNode = m_startNode;
+                    prev = nullptr;
+                    while (currNode->next != nullptr) {
+                        prev = currNode;
+                        currNode = currNode->next;
                     }
+                    prev->next = nullptr;
                     node = currNode;
                     node->setValue(value);
+                    node->setKey(key);
+                } else {
+                    node = new HashNode(key, value);
                 }
+            } else {
+                if (prev != nullptr) {
+                    prev->next = currNode->next;
+                }
+                node = currNode;
+                node->setValue(value);
             }
             if (node != m_startNode) {
                 node->next = m_startNode;
