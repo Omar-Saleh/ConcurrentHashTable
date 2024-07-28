@@ -9,14 +9,13 @@
 #include <optional>
 
 using u32 = std::size_t;
-constexpr u32 MAX_BUCKET_SIZE = 10;
 
-namespace celonis {
+namespace concurrency {
 
     template <typename K, typename V>
     struct HashBucket {
 
-        HashBucket() : m_capacity(0) {};
+        explicit HashBucket(u32 max_elems = 10) : m_currElems(0), m_capacity(max_elems) {};
         ~HashBucket() {
             std::unique_lock lock(m_mutex);
             HashNode<K, V>* prev;
@@ -44,7 +43,7 @@ namespace celonis {
         void put(const K& key, const V& value) {
             HashNode<K, V>* node;
             std::unique_lock lock(m_mutex);
-            if (m_capacity == MAX_BUCKET_SIZE) {
+            if (m_capacity == m_currElems) {
                 auto* currNode = m_startNode;
                 HashNode<K, V>* prev = nullptr;
                 while (currNode->next != nullptr) {
@@ -76,7 +75,7 @@ namespace celonis {
                 node->next = m_startNode;
                 m_startNode = node;
             }
-            m_capacity++;
+            m_currElems++;
         };
 
         void erase(const K& key) {
@@ -96,13 +95,14 @@ namespace celonis {
                     m_startNode = currNode->next;
                 }
                 delete currNode;
-                m_capacity--;
+                m_currElems--;
             }
         };
 
     private:
         HashNode<K, V>* m_startNode = nullptr;
-        u32 m_capacity;
+        u32 m_currElems;
+        u32 m_capacity = 10;
         mutable std::shared_mutex m_mutex;
     };
 }

@@ -3,7 +3,7 @@
 #include <future>
 #include "HashTable.hpp"
 
-using hash_table = celonis::ConcurrentHashTable<std::string, std::string>;
+using hash_table = concurrency::ConcurrentHashTable<std::string, std::string>;
 
 TEST(SingleThread, SingleInsert) {
     hash_table test(1);
@@ -38,6 +38,18 @@ TEST(SingleThread, DeletedThenReinserted) {
     auto res = test.get("Hello");
     EXPECT_TRUE(res.has_value());
     EXPECT_EQ(res.value(), "HashTable");
+}
+
+TEST(SingleThread, Eviction) {
+    concurrency::HashBucket<std::string, std::string> bucket(2);
+    bucket.put("K1", "V1");
+    bucket.put("K2", "V2");
+    bucket.put("K3", "V3");
+    EXPECT_FALSE(bucket.get("K1").has_value());
+    EXPECT_TRUE(bucket.get("K2").has_value());
+    auto res = bucket.get("K3");
+    EXPECT_TRUE(res.has_value());
+    EXPECT_EQ(res.value(), "V3");
 }
 
 void multiThreadFunction(hash_table& table, std::string own_key, std::string other_key) {

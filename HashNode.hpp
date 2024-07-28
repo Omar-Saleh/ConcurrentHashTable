@@ -1,7 +1,7 @@
 #ifndef HASH_NODE_H_
 #define HASH_NODE_H_
 
-namespace celonis {
+namespace concurrency {
     template <typename K, typename V>
     struct HashNode {
 

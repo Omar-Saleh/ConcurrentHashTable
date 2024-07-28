@@ -6,7 +6,7 @@
 
 constexpr u32 DEFAULT_TABLE_SIZE = 13;
 
-namespace celonis {
+namespace concurrency {
 
     template<typename K, typename V, typename HashFnT = std::hash<K>>
     struct ConcurrentHashTable {
