@@ -5,7 +5,6 @@ namespace celonis {
     template <typename K, typename V>
     struct HashNode {
 
-        HashNode();
         HashNode(K k, V v) : m_key(k), m_val(v) {}
         ~HashNode() {
             next = nullptr;
@@ -23,6 +22,10 @@ namespace celonis {
 
         void setValue(V v) {
             m_val = v;
+        }
+
+        void setKey(K k) {
+            m_key = k;
         }
 
     private:
