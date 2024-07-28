@@ -3,6 +3,7 @@
 #include "HashTable.hpp"
 
 using hash_table = concurrency::ConcurrentHashTable<std::string, std::string>;
+using hash_bucket_high_cont = concurrency::HashBucket<u32, u32>;
 
 TEST(SingleThread, SingleInsert) {
     hash_table test(1);
@@ -85,6 +86,12 @@ void mutiThreadDeleteFromOtherThread(hash_table& table, std::string other_key) {
     table.erase(other_key);
 };
 
+void multiThreadHighCont(hash_bucket_high_cont& bucket, u32 key, u32 iterations = 1) {
+    for (u32 i = 0; i < iterations; i += 1) {
+        bucket.put(key + i, key + i);
+    }
+}
+
 TEST(MultiThread, ThreadsCanReadFromEachOther) {
     hash_table test(1);
     auto t1 = std::async(std::launch::async, multiThreadFunction, std::ref(test), "T1", "T2");
@@ -109,4 +116,23 @@ TEST(MultiThread, ThreadsCanDeleteFromEachOther) {
 
     auto res = test.get("T1");
     EXPECT_FALSE(res.has_value());
+}
+
+TEST(MultiThread, HighContention) {
+    hash_bucket_high_cont test(30);
+    u32 iter = 10;
+    auto t1 = std::async(std::launch::async, multiThreadHighCont, std::ref(test), 0, iter);
+    auto t2 = std::async(std::launch::async, multiThreadHighCont, std::ref(test), 20, iter);
+
+    t1.wait();
+    t2.wait();
+
+    for(int i = 0; i < iter; i += 1) {
+        auto res = test.get(i);
+        EXPECT_TRUE(res.has_value());
+        EXPECT_EQ(res.value(), i);
+        res = test.get(i + 20);
+        EXPECT_TRUE(res.has_value());
+        EXPECT_EQ(res.value(), i + 20);
+    }
 }
